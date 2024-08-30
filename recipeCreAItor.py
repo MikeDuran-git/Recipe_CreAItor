@@ -86,7 +86,23 @@ language_texts_en = {
     "input_plan_name_prompt": "Name your weekly plan",
     "button_save_weekly_plan": "Save Weekly Plan",
     "success_weekly_plan_saved": "Weekly plan saved successfully!",
-    "error_provide_plan_name_before_saving": "Please provide a name for the weekly plan before saving."
+    "error_provide_plan_name_before_saving": "Please provide a name for the weekly plan before saving.",
+    "title_my_recipes": "My Recipes",
+    "search_recipe_by_title": "Search for a recipe by title",
+    "no_recipes_saved_yet": "No recipes saved yet.",
+    "label_ingredients": "Ingredients",
+    "label_directions": "Directions",
+    "label_nutritional_info": "Nutritional Information",
+    "label_calories": "Calories",
+    "label_fat": "Fat",
+    "label_carbs": "Carbs",
+    "label_protein": "Protein",
+    "label_prep_time": "Prep Time",
+    "select_for_grocery_list": "Select for Grocery List",
+    "button_delete_recipe": "Delete Recipe",
+    "button_generate_grocery_list": "Generate Grocery List",
+    "title_grocery_list": "Grocery List",
+    "no_grocery_items": "No grocery items found."
 }
 
 
@@ -165,8 +181,25 @@ language_texts_de = {
     "input_plan_name_prompt": "Nennen Sie Ihren Wochenplan",
     "button_save_weekly_plan": "Wochenplan speichern",
     "success_weekly_plan_saved": "Wochenplan erfolgreich gespeichert!",
-    "error_provide_plan_name_before_saving": "Bitte geben Sie einen Namen für den Wochenplan an, bevor Sie speichern."
+    "error_provide_plan_name_before_saving": "Bitte geben Sie einen Namen für den Wochenplan an, bevor Sie speichern.",
+    "title_my_recipes": "Meine Rezepte",
+    "search_recipe_by_title": "Suche nach einem Rezept nach Titel",
+    "no_recipes_saved_yet": "Noch keine Rezepte gespeichert.",
+    "label_ingredients": "Zutaten",
+    "label_directions": "Anweisungen",
+    "label_nutritional_info": "Nährwertinformationen",
+    "label_calories": "Kalorien",
+    "label_fat": "Fett",
+    "label_carbs": "Kohlenhydrate",
+    "label_protein": "Eiweiß",
+    "label_prep_time": "Vorbereitungszeit",
+    "select_for_grocery_list": "Für Einkaufsliste auswählen",
+    "button_delete_recipe": "Rezept löschen",
+    "button_generate_grocery_list": "Einkaufsliste erstellen",
+    "title_grocery_list": "Einkaufsliste",
+    "no_grocery_items": "Keine Einkaufsartikel gefunden."
 }
+
 
 
 
@@ -212,8 +245,8 @@ if not os.path.exists(embedding_model_name):
     except requests.exceptions.RequestException as e:
         print(f"An error occurred while downloading the file: {e}")
 else:
-    print("Embedding model found locally.")
-
+    #print("Embedding model found locally.")
+    pass
 test_chunks_and_embeddings_df_name=data_dir+"embeddings/text_chunks_and_embeddings_df.csv"
 
 # files that are used in the app
@@ -876,19 +909,24 @@ def extract_diet(recipe):
 
 
 # My Recipes Page
-def my_creations():
-    if st.button("Return to Main Page"):
+# My Recipes Page
+def my_creations(language_texts):
+    if st.button(language_texts["button_return_to_main_page"]):
         st.session_state.page = "Main Board"
         st.rerun()
-    st.title("My Recipes")
+    
+    st.title(language_texts["title_my_recipes"])
 
-    search_query = st.text_input("Search for a recipe by title")
+    search_query = st.text_input(language_texts["search_recipe_by_title"])
     saved_recipes = load_recipes()
     selected_recipes = []
+
     if not saved_recipes:
-        st.write("No recipes saved yet.")
+        st.write(language_texts["no_recipes_saved_yet"])
     else:
         filtered_recipes = [recipe for recipe in saved_recipes if search_query.lower() in extract_title(recipe).lower()] if search_query else saved_recipes
+        print(f"Filtered Recipes: {[extract_title(recipe) for recipe in filtered_recipes]}")  # Debug print
+
         for idx, recipe in enumerate(filtered_recipes):
             title = extract_title(recipe)
             ingredients = extract_ingredients(recipe)
@@ -899,29 +937,32 @@ def my_creations():
             diet = extract_diet(recipe)
 
             st.write(f"### {title}")
-            st.write(f"**Ingredients:**\n{ingredients}")
-            st.write(f"**Directions:**\n{directions}")
-            st.write(f"**Nutritional Information:**")
-            st.write(f"- Calories: {calories}")
-            st.write(f"- Fat: {fat}")
-            st.write(f"- Carbs: {carbs}")
-            st.write(f"- Protein: {protein}")
-            st.write(f"**Prep Time:** {prep_time}")
-            st.write(f"**Type:** {type_}")
-            st.write(f"**Diet:** {diet}")
+            st.write(f"**{language_texts['label_ingredients']}:**\n{ingredients}")
+            st.write(f"**{language_texts['label_directions']}:**\n{directions}")
+            st.write(f"**{language_texts['label_nutritional_info']}:**")
+            st.write(f"- {language_texts['label_calories']}: {calories}")
+            st.write(f"- {language_texts['label_fat']}: {fat}")
+            st.write(f"- {language_texts['label_carbs']}: {carbs}")
+            st.write(f"- {language_texts['label_protein']}: {protein}")
+            st.write(f"**{language_texts['label_prep_time']}:** {prep_time}")
+            st.write(f"**{language_texts['label_type']}:** {type_}")
+            st.write(f"**{language_texts['label_diet']}:** {diet}")
 
-            if st.checkbox(f"Select {title} for Grocery List", key=f"select_{idx}"):
+            if st.checkbox(f"{language_texts['select_for_grocery_list']} {title}", key=f"select_{idx}"):
                 selected_recipes.append(recipe)
+                print(f"Selected Recipe: {title}")  # Debug print
 
-            if st.button(f"Delete Recipe {idx + 1}", key=f"delete_{idx}"):
+            if st.button(f"{language_texts['button_delete_recipe']} {idx + 1}", key=f"delete_{idx}"):
                 del saved_recipes[idx]
                 save_recipes(saved_recipes)
-                st.session_state.page = "My Recipes"
+                st.session_state.page = language_texts["title_my_recipes"]
                 st.rerun()
 
     if selected_recipes:
-        if st.button("Generate Grocery List"):
+        print(f"Selected Recipes for Grocery List: {[extract_title(recipe) for recipe in selected_recipes]}")  # Debug print
+        if st.button(language_texts["button_generate_grocery_list"]):
             grocery_list = generate_grocery_list(selected_recipes)
+            print(f"Generated Grocery List: {grocery_list}")  # Debug print
             st.session_state.grocery_list = grocery_list
             st.session_state.page = "Grocery List"
             st.rerun()
@@ -1149,14 +1190,22 @@ def my_plans():
 
 
 # Grocery List Page
-def grocery_list():
-    if st.button("Return to Main Page"):
+def grocery_list(language_texts):
+    if st.button(language_texts["button_return_to_main_page"]):
         st.session_state.page = "Main Board"
         st.rerun()
-    st.title("Grocery List")
-    grocery_list = st.session_state.grocery_list
-    for ingredient, quantity in grocery_list.items():
-        st.write(f"{ingredient}: {quantity}")
+    
+    st.title(language_texts["title_grocery_list"])
+    grocery_list = st.session_state.get("grocery_list", {})
+    
+    if grocery_list:
+        for ingredient, quantity in grocery_list.items():
+            st.write(f"{ingredient}: {quantity}")
+    else:
+        st.write(language_texts.get("no_grocery_items", "No grocery items found."))
+
+
+
 
 
 def main():
@@ -1184,13 +1233,13 @@ def main():
     elif page == "Create Weekly Plan":
         create_weekly_plan(language_texts)
     elif page == "My Recipes":
-        my_creations()
+        my_creations(language_texts)
     elif page == "My Menus":
         my_menus()
     elif page == "My Plans":
         my_plans()
     elif page == "Grocery List":
-        grocery_list()
+        grocery_list(language_texts)
 
 if __name__ == "__main__":
     main()
