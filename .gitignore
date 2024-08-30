@@ -1,0 +1,4 @@
+data/embeddings/openai*
+app-env
+.streamlit
+data/embeddings/embedding_model.pt
