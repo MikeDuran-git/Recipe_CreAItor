@@ -13,6 +13,11 @@ import warnings
 
 language_texts_en = {
     "language": "English",
+    "title_my_plans": "My Plans",  # Added this key
+    "no_plans_saved_yet": "No plans saved yet.",  # Added this key
+    "label_plan": "Plan",  # Added this key
+    "label_total_nutrition": "Total Nutritional Information for",  # Added this key
+    "button_delete_plan": "Delete Plan",  # Added this key
     "title_main": "Recipe CreAItor",
     "welcome_message": "Welcome to your AI buffed Recipe generator!",
     "joke_caption": "Don't laugh, your name isn't any better!",
@@ -112,6 +117,11 @@ language_texts_en = {
 
 language_texts_de = {
     "language": "Deutsch",
+    "title_my_plans": "Meine Pläne",  # Added this key
+    "no_plans_saved_yet": "Noch keine Pläne gespeichert.",  # Added this key
+    "label_plan": "Plan",  # Added this key
+    "label_total_nutrition": "Gesamt-Nährwertangaben für",  # Added this key
+    "button_delete_plan": "Plan löschen",  # Added this key
     "title_main": "Rezept Ersteller",
     "welcome_message": "Willkommen bei deinem KI-gestärkten Rezeptgenerator!",
     "joke_caption": "Lach nicht, dein Name ist auch nicht besser!",
@@ -207,7 +217,6 @@ language_texts_de = {
     "button_generate_grocery_list": "Einkaufsliste erstellen",  # Added this key
     "button_delete_menu": "Menü löschen"  # Added this key
 }
-
 
 
 
@@ -1135,18 +1144,18 @@ def display_recipe(recipe):
     st.write(f"**Diet:** {diet}")
 
 
-# My Plans Page
-def my_plans():
-    if st.button("Return to Main Page", key="return_main_page"):
+def my_plans(language_texts):
+    if st.button(language_texts["button_return_to_main_page"], key="return_main_page"):
         st.session_state.page = "Main Board"
         st.rerun()
-    st.title("My Plans")
+    
+    st.title(language_texts["title_my_plans"])
     saved_plans = load_plans()
     if not saved_plans:
-        st.write("No plans saved yet.")
+        st.write(language_texts["no_plans_saved_yet"])
     else:
         for idx, plan in enumerate(saved_plans):
-            st.write(f"### Plan {idx + 1}: {plan['plan_name']}")
+            st.write(f"### {language_texts['label_plan']} {idx + 1}: {plan['plan_name']}")
             for day, items in plan["days"].items():
                 st.write(f"#### {day}")
 
@@ -1176,25 +1185,26 @@ def my_plans():
                         total_protein += float(protein)
 
                 # Display the total nutritional information for the day
-                st.write(f"**Total Nutritional Information for {day}:**")
-                st.write(f"- Calories: {total_calories}")
-                st.write(f"- Fat: {total_fat}g")
-                st.write(f"- Carbs: {total_carbs}g")
-                st.write(f"- Protein: {total_protein}g")
+                st.write(f"**{language_texts['label_total_nutrition']} {day}:**")
+                st.write(f"- {language_texts['label_calories']}: {total_calories}")
+                st.write(f"- {language_texts['label_fat']}: {total_fat}g")
+                st.write(f"- {language_texts['label_carbs']}: {total_carbs}g")
+                st.write(f"- {language_texts['label_protein']}: {total_protein}g")
                 st.write("---")
 
-            if st.button(f"Generate Grocery List for Plan {idx + 1}", key=f"plan_select_{idx}"):
+            if st.button(f"{language_texts['button_generate_grocery_list']} {language_texts['label_plan']} {idx + 1}", key=f"plan_select_{idx}"):
                 all_recipes = [recipe for day_items in plan["days"].values() for item in day_items for recipe in (item if isinstance(item, list) else [item])]
                 grocery_list = generate_grocery_list(all_recipes)
                 st.session_state.grocery_list = grocery_list
                 st.session_state.page = "Grocery List"
                 st.rerun()
 
-            if st.button(f"Delete Plan {idx + 1}", key=f"delete_plan_{idx}"):
+            if st.button(f"{language_texts['button_delete_plan']} {idx + 1}", key=f"delete_plan_{idx}"):
                 del saved_plans[idx]
                 save_plans(saved_plans)
                 st.session_state.page = "My Plans"
                 st.rerun()
+
 
 
 # Grocery List Page
@@ -1241,7 +1251,7 @@ def main():
     elif page == "My Menus":
         my_menus(language_texts)
     elif page == "My Plans":
-        my_plans()
+        my_plans(language_texts)
     elif page == "Grocery List":
         grocery_list(language_texts)
 
