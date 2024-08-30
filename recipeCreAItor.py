@@ -72,7 +72,6 @@ language_texts_en = {
     "label_number_of_recipes_generated": "Number of recipes generated",
     "button_return_to_main_page": "Return to Main Page",
     "label_menu": "Menu",
-    # New entries for the weekly plan creation
     "title_create_weekly_plan": "Create Weekly Meal Plan",
     "select_plan_type_for_day": "Select an option for",
     "option_none": "None",
@@ -102,7 +101,12 @@ language_texts_en = {
     "button_delete_recipe": "Delete Recipe",
     "button_generate_grocery_list": "Generate Grocery List",
     "title_grocery_list": "Grocery List",
-    "no_grocery_items": "No grocery items found."
+    "no_grocery_items": "No grocery items found.",
+    "title_my_menus": "My Menus",  # Added this key
+    "search_menu_by_name": "Search for a menu by name",  # Added this key
+    "no_menus_saved_yet": "No menus saved yet.",  # Added this key
+    "button_generate_grocery_list": "Generate Grocery List",  # Added this key
+    "button_delete_menu": "Delete Menu"  # Added this key
 }
 
 
@@ -167,7 +171,6 @@ language_texts_de = {
     "label_number_of_recipes_generated": "Anzahl der generierten Rezepte",
     "button_return_to_main_page": "Zurück zur Hauptseite",
     "label_menu": "Menü",
-    # New entries for the weekly plan creation
     "title_create_weekly_plan": "Wochenplan erstellen",
     "select_plan_type_for_day": "Wählen Sie eine Option für",
     "option_none": "Keine",
@@ -197,7 +200,12 @@ language_texts_de = {
     "button_delete_recipe": "Rezept löschen",
     "button_generate_grocery_list": "Einkaufsliste erstellen",
     "title_grocery_list": "Einkaufsliste",
-    "no_grocery_items": "Keine Einkaufsartikel gefunden."
+    "no_grocery_items": "Keine Einkaufsartikel gefunden.",
+    "title_my_menus": "Meine Menüs",  # Added this key
+    "search_menu_by_name": "Suche nach einem Menü nach Name",  # Added this key
+    "no_menus_saved_yet": "Noch keine Menüs gespeichert.",  # Added this key
+    "button_generate_grocery_list": "Einkaufsliste erstellen",  # Added this key
+    "button_delete_menu": "Menü löschen"  # Added this key
 }
 
 
@@ -969,21 +977,20 @@ def my_creations(language_texts):
 
 
 
-# My Menus Page
-def my_menus():
-    if st.button("Return to Main Page"):
+def my_menus(language_texts):
+    if st.button(language_texts["button_return_to_main_page"]):
         st.session_state.page = "Main Board"
         st.rerun()
-    st.title("My Menus")
+    st.title(language_texts["title_my_menus"])
 
-    search_query = st.text_input("Search for a menu by name")
+    search_query = st.text_input(language_texts["search_menu_by_name"])
     saved_menus = load_menus()
     if not saved_menus:
-        st.write("No menus saved yet.")
+        st.write(language_texts["no_menus_saved_yet"])
     else:
         filtered_menus = [menu for menu in saved_menus if search_query.lower() in menu['name'].lower()] if search_query else saved_menus
         for idx, menu in enumerate(filtered_menus):
-            st.write(f"### Menu {idx + 1}: {menu['name']}")
+            st.write(f"### {language_texts['label_menu']} {idx + 1}: {menu['name']}")
             for j, recipe in enumerate(menu['recipes']):
                 title = extract_title(recipe)
                 ingredients = extract_ingredients(recipe)
@@ -993,29 +1000,30 @@ def my_menus():
                 type_ = extract_type(recipe)
                 diet = extract_diet(recipe)
 
-                st.write(f"#### Recipe {j + 1}: {title}")
-                st.write(f"**Ingredients:**\n{ingredients}")
-                st.write(f"**Directions:**\n{directions}")
-                st.write(f"**Nutritional Information:**")
-                st.write(f"- Calories: {calories}")
-                st.write(f"- Fat: {fat}")
-                st.write(f"- Carbs: {carbs}")
-                st.write(f"- Protein: {protein}")
-                st.write(f"**Prep Time:** {prep_time}")
-                st.write(f"**Type:** {type_}")
-                st.write(f"**Diet:** {diet}")
+                st.write(f"#### {language_texts['label_recipe']} {j + 1}: {title}")
+                st.write(f"**{language_texts['label_ingredients']}:**\n{ingredients}")
+                st.write(f"**{language_texts['label_directions']}:**\n{directions}")
+                st.write(f"**{language_texts['label_nutritional_info']}:**")
+                st.write(f"- {language_texts['label_calories']}: {calories}")
+                st.write(f"- {language_texts['label_fat']}: {fat}")
+                st.write(f"- {language_texts['label_carbs']}: {carbs}")
+                st.write(f"- {language_texts['label_protein']}: {protein}")
+                st.write(f"**{language_texts['label_prep_time']}:** {prep_time}")
+                st.write(f"**{language_texts['label_type']}:** {type_}")
+                st.write(f"**{language_texts['label_diet']}:** {diet}")
 
-            if st.button(f"Generate Grocery List for Menu {idx + 1}", key=f"menu_select_{idx}"):
+            if st.button(f"{language_texts['button_generate_grocery_list']} {idx + 1}", key=f"menu_select_{idx}"):
                 grocery_list = generate_grocery_list(menu['recipes'])
                 st.session_state.grocery_list = grocery_list
                 st.session_state.page = "Grocery List"
                 st.rerun()
 
-            if st.button(f"Delete Menu {idx + 1}", key=f"delete_menu_{idx}"):
+            if st.button(f"{language_texts['button_delete_menu']} {idx + 1}", key=f"delete_menu_{idx}"):
                 del saved_menus[idx]
                 save_menus(saved_menus)
-                st.session_state.page = "My Menus"
+                st.session_state.page = language_texts["title_my_menus"]
                 st.rerun()
+
 
 
 def generate_grocery_list(selected_recipes):
@@ -1204,10 +1212,6 @@ def grocery_list(language_texts):
     else:
         st.write(language_texts.get("no_grocery_items", "No grocery items found."))
 
-
-
-
-
 def main():
     if 'page' not in st.session_state:
         st.session_state.page = "Main Board"
@@ -1235,7 +1239,7 @@ def main():
     elif page == "My Recipes":
         my_creations(language_texts)
     elif page == "My Menus":
-        my_menus()
+        my_menus(language_texts)
     elif page == "My Plans":
         my_plans()
     elif page == "Grocery List":
