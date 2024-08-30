@@ -14,6 +14,12 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
+client = OpenAI(
+    api_key=st.secrets['OPENAI_API_KEY'],
+    organization=st.secrets['ORGANIZATION_ID']
+)
+
+
 data_dir = "data/"
 
 # Load models and data
@@ -34,7 +40,6 @@ if not os.path.exists(embedding_model_name):
             r.raise_for_status()
             total_size_in_bytes = int(r.headers.get('content-length', 0))
             block_size = 8192  # 8 Kibibytes
-            progress_bar = tqdm(total=total_size_in_bytes, unit='iB', unit_scale=True)
             
             # Create directory if it doesn't exist
             os.makedirs(os.path.dirname(embedding_model_name), exist_ok=True)
@@ -43,8 +48,6 @@ if not os.path.exists(embedding_model_name):
                 for chunk in r.iter_content(chunk_size=block_size):
                     if chunk:  # filter out keep-alive new chunks
                         f.write(chunk)
-                        progress_bar.update(len(chunk))
-            progress_bar.close()
         print("Download complete!")
     except requests.exceptions.RequestException as e:
         print(f"An error occurred while downloading the file: {e}")
@@ -76,10 +79,7 @@ embeddings = torch.tensor(
 ).to(device)
 
 
-client = OpenAI(
-    api_key=st.secrets['OPENAI_API_KEY'],
-    organization=st.secrets['ORGANIZATION_ID']
-)
+
 
 def send_message_to_recipe_model(msg, 
                                  content=(
