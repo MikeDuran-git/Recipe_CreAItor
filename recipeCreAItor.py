@@ -8,9 +8,168 @@ from sentence_transformers import util, SentenceTransformer
 from time import perf_counter as timer
 import tiktoken
 import os
-import tqdm
 import requests
 import warnings
+
+language_texts_en = {
+    "language": "English",
+    "title_main": "Recipe CreAItor",
+    "welcome_message": "Welcome to your AI buffed Recipe generator!",
+    "joke_caption": "Don't laugh, your name isn't any better!",
+    "main_board_description": "Create New Recipes, Menus, and Weekly Plans",
+    "main_board_section_new": "Create New",
+    "button_create_recipe": "Create Recipe",
+    "button_create_menu": "Create Menu",
+    "button_create_weekly_plan": "Create Weekly Plan",
+    "main_board_section_creations": "My Creations",
+    "button_my_recipes": "My Recipes",
+    "button_my_menus": "My Menus",
+    "button_my_weekly_plans": "My Weekly Plans",
+    "title_create_recipe": "Create Recipe",
+    "step_select_dish_type": "Step 1: Select Dish Type",
+    "select_dish_type_prompt": "What kind of dish do you want to make?",
+    "step_number_of_people": "Step 2: Number of People",
+    "slider_number_of_people_prompt": "For how many people? (between 1 and 8)",
+    "step_dietary_preferences": "Step 3: Dietary Preferences and Restrictions",
+    "label_diet": "Diet",
+    "label_restrictions": "Restrictions or dislikes (ex: 'no red fruits, no nuts...')",
+    "step_ingredients": "Step 4: Ingredients",
+    "input_ingredients_prompt": "What ingredients would you like the recipe to have? (list up to 5 ingredients separated by commas, you can also just say 'fruits' or 'vegetables')",
+    "step_preparation_time": "Step 5: Preparation Time",
+    "select_preparation_time_prompt": "How much time would you like the recipe to take to prepare?",
+    "step_cooking_tools": "Step 6: Cooking Tools",
+    "multiselect_cooking_tools_prompt": "What are your cooking tools?",
+    "button_generate_recipe": "Generate Recipe",
+    "message_generating_recipe": "Generating recipe...",
+    "label_recipe_prompt": "Recipe Prompt",
+    "label_generated_recipe": "Generated Recipe",
+    "success_recipe_generated": "Recipe generated in {elapsed_time:.2f} seconds.",
+    "input_token_count_label": "Input token count: {input_token_count}",
+    "output_token_count_label": "Output token count: {output_token_count}",
+    "button_save_recipe": "Save Recipe",
+    "success_recipe_saved": "Recipe saved successfully!",
+    "title_create_menu": "Create Menu",
+    "step_menu_name": "Step 1: Menu Name",
+    "input_menu_name_prompt": "Enter a name for your menu",
+    "step_number_of_recipes": "Step 2: Number of Recipes",
+    "slider_number_of_recipes_prompt": "How many recipes do you want to have in your menu? (2 to 6)",
+    "step_menu_number_of_people": "Step 3: Number of People",
+    "slider_menu_number_of_people_prompt": "For how many people? (between 1 and 8)",
+    "step_menu_dietary_preferences": "Step 4: Dietary Preferences and Restrictions",
+    "step_menu_cooking_tools": "Step 5: Cooking Tools",
+    "button_generate_menu": "Generate Menu",
+    "message_generating_menu": "Generating menu...",
+    "label_menu_prompt": "Menu Prompt",
+    "label_generated_menu": "Generated Menu",
+    "success_menu_generated": "Menu generated in {elapsed_time:.2f} seconds.",
+    "input_menu_token_count_label": "Input token count: {input_token_count}",
+    "output_menu_token_count_label": "Output token count: {output_token_count}",
+    "button_save_menu": "Save Menu",
+    "success_menu_saved": "Menu saved successfully!",
+    "label_person": "Person",
+    "label_recipe": "Recipe",
+    "label_type": "Type",
+    "label_number_of_recipes_generated": "Number of recipes generated",
+    "button_return_to_main_page": "Return to Main Page",
+    "label_menu": "Menu",
+    # New entries for the weekly plan creation
+    "title_create_weekly_plan": "Create Weekly Meal Plan",
+    "select_plan_type_for_day": "Select an option for",
+    "option_none": "None",
+    "option_add_existing_menu": "Add Existing Menu",
+    "option_add_existing_recipe": "Add Existing Recipe",
+    "select_menu_for_day": "Select a menu for",
+    "select_recipe_for_day": "Select a recipe for",
+    "no_existing_menus_available": "No existing menus available.",
+    "no_existing_recipes_available": "No existing recipes available.",
+    "add_another_plan_for_day": "Add another plan for",
+    "input_plan_name_prompt": "Name your weekly plan",
+    "button_save_weekly_plan": "Save Weekly Plan",
+    "success_weekly_plan_saved": "Weekly plan saved successfully!",
+    "error_provide_plan_name_before_saving": "Please provide a name for the weekly plan before saving."
+}
+
+
+language_texts_de = {
+    "language": "Deutsch",
+    "title_main": "Rezept Ersteller",
+    "welcome_message": "Willkommen bei deinem KI-gestärkten Rezeptgenerator!",
+    "joke_caption": "Lach nicht, dein Name ist auch nicht besser!",
+    "main_board_description": "Erstelle neue Rezepte, Menüs und Wochenpläne",
+    "main_board_section_new": "Erstelle Neues",
+    "button_create_recipe": "Rezept erstellen",
+    "button_create_menu": "Menü erstellen",
+    "button_create_weekly_plan": "Wochenplan erstellen",
+    "main_board_section_creations": "Meine Kreationen",
+    "button_my_recipes": "Meine Rezepte",
+    "button_my_menus": "Meine Menüs",
+    "button_my_weekly_plans": "Meine Wochenpläne",
+    "title_create_recipe": "Rezept erstellen",
+    "step_select_dish_type": "Schritt 1: Wählen Sie die Art des Gerichts",
+    "select_dish_type_prompt": "Welche Art von Gericht möchten Sie zubereiten?",
+    "step_number_of_people": "Schritt 2: Anzahl der Personen",
+    "slider_number_of_people_prompt": "Für wie viele Personen? (zwischen 1 und 8)",
+    "step_dietary_preferences": "Schritt 3: Ernährungsvorlieben und Einschränkungen",
+    "label_diet": "Ernährung",
+    "label_restrictions": "Einschränkungen oder Abneigungen (z.B.: 'keine roten Früchte, keine Nüsse...')",
+    "step_ingredients": "Schritt 4: Zutaten",
+    "input_ingredients_prompt": "Welche Zutaten möchten Sie im Rezept verwenden? (bis zu 5 Zutaten, getrennt durch Kommas, Sie können auch einfach 'Früchte' oder 'Gemüse' sagen)",
+    "step_preparation_time": "Schritt 5: Zubereitungszeit",
+    "select_preparation_time_prompt": "Wie viel Zeit möchten Sie für die Zubereitung des Rezepts aufwenden?",
+    "step_cooking_tools": "Schritt 6: Küchengeräte",
+    "multiselect_cooking_tools_prompt": "Welche Küchengeräte haben Sie zur Verfügung?",
+    "button_generate_recipe": "Rezept generieren",
+    "message_generating_recipe": "Rezept wird generiert...",
+    "label_recipe_prompt": "Rezeptaufforderung",
+    "label_generated_recipe": "Generiertes Rezept",
+    "success_recipe_generated": "Rezept in {elapsed_time:.2f} Sekunden generiert.",
+    "input_token_count_label": "Anzahl der Eingabe-Token: {input_token_count}",
+    "output_token_count_label": "Anzahl der Ausgabe-Token: {output_token_count}",
+    "button_save_recipe": "Rezept speichern",
+    "success_recipe_saved": "Rezept erfolgreich gespeichert!",
+    "title_create_menu": "Menü erstellen",
+    "step_menu_name": "Schritt 1: Name des Menüs",
+    "input_menu_name_prompt": "Geben Sie einen Namen für Ihr Menü ein",
+    "step_number_of_recipes": "Schritt 2: Anzahl der Rezepte",
+    "slider_number_of_recipes_prompt": "Wie viele Rezepte möchten Sie in Ihrem Menü haben? (2 bis 6)",
+    "step_menu_number_of_people": "Schritt 3: Anzahl der Personen",
+    "slider_menu_number_of_people_prompt": "Für wie viele Personen? (zwischen 1 und 8)",
+    "step_menu_dietary_preferences": "Schritt 4: Ernährungsvorlieben und Einschränkungen",
+    "step_menu_cooking_tools": "Schritt 5: Küchengeräte",
+    "button_generate_menu": "Menü generieren",
+    "message_generating_menu": "Menü wird generiert...",
+    "label_menu_prompt": "Menüaufforderung",
+    "label_generated_menu": "Generiertes Menü",
+    "success_menu_generated": "Menü in {elapsed_time:.2f} Sekunden generiert.",
+    "input_menu_token_count_label": "Anzahl der Eingabe-Token: {input_token_count}",
+    "output_menu_token_count_label": "Anzahl der Ausgabe-Token: {output_token_count}",
+    "button_save_menu": "Menü speichern",
+    "success_menu_saved": "Menü erfolgreich gespeichert!",
+    "label_person": "Person",
+    "label_recipe": "Rezept",
+    "label_type": "Typ",
+    "label_number_of_recipes_generated": "Anzahl der generierten Rezepte",
+    "button_return_to_main_page": "Zurück zur Hauptseite",
+    "label_menu": "Menü",
+    # New entries for the weekly plan creation
+    "title_create_weekly_plan": "Wochenplan erstellen",
+    "select_plan_type_for_day": "Wählen Sie eine Option für",
+    "option_none": "Keine",
+    "option_add_existing_menu": "Vorhandenes Menü hinzufügen",
+    "option_add_existing_recipe": "Vorhandenes Rezept hinzufügen",
+    "select_menu_for_day": "Wählen Sie ein Menü für",
+    "select_recipe_for_day": "Wählen Sie ein Rezept für",
+    "no_existing_menus_available": "Keine vorhandenen Menüs verfügbar.",
+    "no_existing_recipes_available": "Keine vorhandenen Rezepte verfügbar.",
+    "add_another_plan_for_day": "Einen weiteren Plan hinzufügen für",
+    "input_plan_name_prompt": "Nennen Sie Ihren Wochenplan",
+    "button_save_weekly_plan": "Wochenplan speichern",
+    "success_weekly_plan_saved": "Wochenplan erfolgreich gespeichert!",
+    "error_provide_plan_name_before_saving": "Bitte geben Sie einen Namen für den Wochenplan an, bevor Sie speichern."
+}
+
+
+
 
 warnings.filterwarnings("ignore")
 
@@ -19,6 +178,7 @@ client = OpenAI(
     organization=st.secrets['ORGANIZATION_ID']
 )
 
+language="English"
 
 data_dir = "data/"
 
@@ -62,8 +222,6 @@ saved_recipe_filename=data_dir+"recipes/saved_recipes.json"
 saved_menu_filename=data_dir+"recipes/saved_menus.json"
 saved_plan_filename=data_dir+"recipes/saved_plans.json"
 
-
-
 recipe_dataset = pd.read_csv(recipe_dataset)
 embedding_model = torch.load(embedding_model_name)
 text_chunks_and_embedding_df = pd.read_csv(test_chunks_and_embeddings_df_name)
@@ -77,9 +235,6 @@ embeddings = torch.tensor(
     np.array(text_chunks_and_embedding_df["embedding"].tolist()),
     dtype=torch.float32
 ).to(device)
-
-
-
 
 def send_message_to_recipe_model(msg, 
                                  content=(
@@ -184,43 +339,44 @@ def navigate():
 
 
 # Main Board Layout
-def main_board():
-    st.title("Recipe CreAItor")
-    st.markdown("### Welcome to your AI buffed Recipe generator!")
-    st.markdown("_Don't laugh, your name isn't any better!_")
-    st.caption("Create New Recipes, Menus, and Weekly Plans")
+def main_board(language_texts):
+    st.title(language_texts["title_main"])
+    st.markdown(f"### {language_texts['welcome_message']}")
+    st.markdown(f"_{language_texts['joke_caption']}_")
+    st.caption(language_texts["main_board_description"])
     st.markdown("---")
 
-    st.header("Create New")
+    st.header(language_texts["main_board_section_new"])
     col1, col2, col3 = st.columns(3)
     with col1:
-        if st.button("Create Recipe"):
+        if st.button(language_texts["button_create_recipe"]):
             st.session_state.page = "Create Recipe"
             st.rerun()
     with col2:
-        if st.button("Create Menu"):
+        if st.button(language_texts["button_create_menu"]):
             st.session_state.page = "Create Menu"
             st.rerun()
     with col3:
-        if st.button("Create Weekly Plan"):
+        if st.button(language_texts["button_create_weekly_plan"]):
             st.session_state.page = "Create Weekly Plan"
             st.rerun()
     
     st.markdown("---")
-    st.header("My Creations")
+    st.header(language_texts["main_board_section_creations"])
     col4, col5, col6 = st.columns(3)
     with col4:
-        if st.button("My Recipes"):
+        if st.button(language_texts["button_my_recipes"]):
             st.session_state.page = "My Recipes"
             st.rerun()
     with col5:
-        if st.button("My Menus"):
+        if st.button(language_texts["button_my_menus"]):
             st.session_state.page = "My Menus"
             st.rerun()
     with col6:
-        if st.button("My Weekly Plans"):
+        if st.button(language_texts["button_my_weekly_plans"]):
             st.session_state.page = "My Plans"
             st.rerun()
+
 
 
 def calculate_token_count(text, model_name=model):
@@ -329,7 +485,7 @@ def prompt_formatter(query: str, context_items: str) -> str:
     return prompt
 
 
-def generate_recipe_based_on_questions_with_RAG():
+def generate_recipe_based_on_questions_with_RAG(language: str = "English"):
     dish_type = st.session_state.dish_type
     number_of_people = st.session_state.number_of_people
     diets = st.session_state.diets
@@ -395,6 +551,8 @@ def generate_recipe_based_on_questions_with_RAG():
     - Preparation time
     - Category
     - Diet
+
+    return it in {language} but keep the token structure.
     """
 
     RAG_context = retrieve_relevant_recipe(query=f"{', '.join(compatible_ingredients)}", embeddings=embeddings, pages_and_chunks=pages_and_chunks)
@@ -415,20 +573,22 @@ def format_recipe(recipe):
 
 
 # Recipe Creation Steps
-def create_recipe():
-    if st.button("Return to Main Page"):
+def create_recipe(language_texts):
+    if st.button(language_texts["button_return_to_main_page"]):
         st.session_state.page = "Main Board"
         st.rerun()
-    st.title("Create Recipe")
-    st.write("### Step 1: Select Dish Type")
-    dish_type = st.selectbox("What kind of dish do you want to make?", ["Breakfast", "Lunch", "Dinner", "Dessert", "Appetizer", "Snacks"])
+    
+    st.title(language_texts["title_create_recipe"])
+    st.write(f"### {language_texts['step_select_dish_type']}")
+    dish_type = st.selectbox(language_texts["select_dish_type_prompt"], 
+                             ["Breakfast", "Lunch", "Dinner", "Dessert", "Appetizer", "Snacks"])
     st.session_state.dish_type = dish_type
 
-    st.write("### Step 2: Number of People")
-    number_of_people = st.slider("For how many people? (between 1 and 8)", 1, 8, 1)
+    st.write(f"### {language_texts['step_number_of_people']}")
+    number_of_people = st.slider(language_texts["slider_number_of_people_prompt"], 1, 8, 1)
     st.session_state.number_of_people = number_of_people
 
-    st.write("### Step 3: Dietary Preferences and Restrictions")
+    st.write(f"### {language_texts['step_dietary_preferences']}")
     diet_options = ["none", "vegan", "vegetarian", "pescetarian", "no gluten", "no lactose", "no pork"]
     diets = []
     restrictions = []
@@ -436,142 +596,142 @@ def create_recipe():
         st.write(f"#### Person {i + 1}")
         col1, col2 = st.columns(2)
         with col1:
-            diet = st.selectbox(f"Diet", diet_options, key=f"diet_{i}")
+            diet = st.selectbox(language_texts["label_diet"], diet_options, key=f"diet_{i}")
         with col2:
-            restriction = st.text_input(f"Restrictions or dislikes (ex: 'no red fruits, no nuts...')", key=f"restriction_{i}")
+            restriction = st.text_input(language_texts["label_restrictions"], key=f"restriction_{i}")
         diets.append(diet)
         restrictions.append([r.strip().lower() for r in restriction.split(',')])
     st.session_state.diets = diets
     st.session_state.restrictions = restrictions
 
-    st.write("### Step 4: Ingredients")
-    ingredients = st.text_input("What ingredients would you like the recipe to have? (list up to 5 ingredients separated by commas, you can also just say 'fruits' or 'vegetables')").split(',')
+    st.write(f"### {language_texts['step_ingredients']}")
+    ingredients = st.text_input(language_texts["input_ingredients_prompt"]).split(',')
     ingredients = [ing.strip().lower() for ing in ingredients]
     st.session_state.ingredients = ingredients
 
-    st.write("### Step 5: Preparation Time")
+    st.write(f"### {language_texts['step_preparation_time']}")
     time_options = ["at most 15 min", "between 15-30 min", "30 min or more"]
-    max_time = st.selectbox("How much time would you like the recipe to take to prepare?", time_options)
+    max_time = st.selectbox(language_texts["select_preparation_time_prompt"], time_options)
     st.session_state.max_time = max_time
 
-    st.write("### Step 6: Cooking Tools")
+    st.write(f"### {language_texts['step_cooking_tools']}")
     tool_options = ["stovetop", "oven", "blender", "microwave", "automatic cooker", "fryer"]
-    cooking_tools = st.multiselect("What are your cooking tools?", tool_options)
+    cooking_tools = st.multiselect(language_texts["multiselect_cooking_tools_prompt"], tool_options)
     st.session_state.cooking_tools = cooking_tools
 
-    if st.button("Generate Recipe"):
-        with st.spinner('Generating recipe...'):
+    if st.button(language_texts["button_generate_recipe"]):
+        with st.spinner(language_texts["message_generating_recipe"]):
             start_time = timer()
-            recipe_prompt, generated_recipe = generate_recipe_based_on_questions_with_RAG()
+            recipe_prompt, generated_recipe = generate_recipe_based_on_questions_with_RAG(language_texts['language'])
             end_time = timer()
             elapsed_time = end_time - start_time
             input_token_count = calculate_token_count(recipe_prompt)
             output_token_count = calculate_token_count(generated_recipe)
-            st.write("### Recipe Prompt")
+            st.write(f"### {language_texts['label_recipe_prompt']}")
             st.text_area("Prompt", recipe_prompt, height=300)
-            st.write("### Generated Recipe")
+            st.write(f"### {language_texts['label_generated_recipe']}")
             formatted_recipe = format_recipe(generated_recipe)
             st.session_state.formatted_recipe = formatted_recipe
             st.text_area("Recipe", formatted_recipe, height=300)
-            st.success(f'Recipe generated in {elapsed_time:.2f} seconds.')
-            st.write(f"Input token count: {input_token_count}")
-            st.write(f"Output token count: {output_token_count}")
+            st.success(language_texts["success_recipe_generated"].format(elapsed_time=elapsed_time))
+            st.write(language_texts["input_token_count_label"].format(input_token_count=input_token_count))
+            st.write(language_texts["output_token_count_label"].format(output_token_count=output_token_count))
 
     if 'formatted_recipe' in st.session_state:
-        if st.button("Save Recipe"):
+        if st.button(language_texts["button_save_recipe"]):
             saved_recipes = load_recipes()
             saved_recipes.append(st.session_state.formatted_recipe)
             save_recipes(saved_recipes)
-            st.success("Recipe saved successfully!")
+            st.success(language_texts["success_recipe_saved"])
             st.session_state.page = "Main Board"
             st.rerun()
 
 
-def create_menu():
-    if st.button("Return to Main Page"):
+
+def create_menu(language_texts):
+    if st.button(language_texts['button_return_to_main_page']):
         st.session_state.page = "Main Board"
         st.rerun()
 
-    st.title("Create Menu")
+    st.title(language_texts['title_create_menu'])
 
-    st.write("### Step 1: Menu Name")
-    menu_name = st.text_input("Enter a name for your menu")
+    st.write(f"### {language_texts['step_menu_name']}")
+    menu_name = st.text_input(language_texts['input_menu_name_prompt'])
     st.session_state.menu_name = menu_name
 
-    st.write("### Step 2: Number of Recipes")
-    num_recipes = st.slider("How many recipes do you want to have in your menu? (2 to 6)", 2, 6, 2)
+    st.write(f"### {language_texts['step_number_of_recipes']}")
+    num_recipes = st.slider(language_texts['slider_number_of_recipes_prompt'], 2, 6, 2)
     st.session_state.num_recipes = num_recipes
 
-    st.write("### Step 3: Number of People")
-    number_of_people = st.slider("For how many people? (between 1 and 8)", 1, 8, 1)
+    st.write(f"### {language_texts['step_menu_number_of_people']}")
+    number_of_people = st.slider(language_texts['slider_menu_number_of_people_prompt'], 1, 8, 1)
     st.session_state.number_of_people = number_of_people
 
-    st.write("### Step 4: Dietary Preferences and Restrictions")
+    st.write(f"### {language_texts['step_menu_dietary_preferences']}")
     diet_options = ["none", "vegan", "vegetarian", "pescetarian", "no gluten", "no lactose", "no pork"]
     diets = []
     restrictions = []
     for i in range(number_of_people):
-        st.write(f"#### Person {i + 1}")
+        st.write(f"#### {language_texts['label_person']} {i + 1}")
         col1, col2 = st.columns(2)
         with col1:
-            diet = st.selectbox(f"Diet", diet_options, key=f"menu_diet_{i}")
+            diet = st.selectbox(language_texts['label_diet'], diet_options, key=f"menu_diet_{i}")
         with col2:
-            restriction = st.text_input(f"Restrictions or dislikes (list ingredients, separated by commas)", key=f"menu_restriction_{i}")
+            restriction = st.text_input(language_texts['label_restrictions'], key=f"menu_restriction_{i}")
         diets.append(diet)
         restrictions.append([r.strip().lower() for r in restriction.split(',')])
     st.session_state.diets = diets
     st.session_state.restrictions = restrictions
 
-    st.write("### Step 5: Cooking Tools")
+    st.write(f"### {language_texts['step_menu_cooking_tools']}")
     tool_options = ["stovetop", "oven", "blender", "microwave", "automatic cooker", "fryer"]
-    cooking_tools = st.multiselect("What are your cooking tools?", tool_options)
+    cooking_tools = st.multiselect(language_texts['multiselect_cooking_tools_prompt'], tool_options)
     st.session_state.cooking_tools = cooking_tools
 
     recipes = []
     for i in range(num_recipes):
-        st.write(f"### Recipe {i + 1}")
-        recipe_type = st.selectbox("What type of recipe is it?", ["Breakfast", "Lunch", "Dinner", "Dessert", "Appetizer", "Snacks"], key=f"recipe_type_{i}")
-        ingredients = st.text_input(f"What ingredients will be in recipe {i + 1}? (list up to 5 ingredients, separated by commas)", key=f"recipe_ingredients_{i}").split(',')
+        st.write(f"### {language_texts['label_recipe']} {i + 1}")
+        recipe_type = st.selectbox(language_texts['label_type'], ["Breakfast", "Lunch", "Dinner", "Dessert", "Appetizer", "Snacks"], key=f"recipe_type_{i}")
+        ingredients = st.text_input(language_texts['input_ingredients_prompt'], key=f"recipe_ingredients_{i}").split(',')
         ingredients = [ing.strip().lower() for ing in ingredients]
         time_options = ["at most 15 min", "between 15-30 min", "30 min or more"]
-        max_time = st.selectbox(f"In how much time would you like recipe {i + 1} to be made?", time_options, key=f"recipe_time_{i}")
+        max_time = st.selectbox(language_texts['select_preparation_time_prompt'], time_options, key=f"recipe_time_{i}")
         recipes.append((recipe_type, ingredients, max_time))
     st.session_state.recipes = recipes
 
-    if st.button("Generate Menu"):
-        with st.spinner('Generating menu...'):
+    if st.button(language_texts['button_generate_menu']):
+        with st.spinner(language_texts['message_generating_menu']):
             start_time = timer()
-            menu_prompt, generated_menu = generate_menu_based_on_questions_with_RAG()
+            menu_prompt, generated_menu = generate_menu_based_on_questions_with_RAG(language_texts['language'])
             end_time = timer()
             elapsed_time = end_time - start_time
             input_token_count = calculate_token_count(menu_prompt)
             output_token_count = calculate_token_count("".join(generated_menu))
-            st.write("### Menu Prompt")
+            st.write(f"### {language_texts['label_menu_prompt']}")
             st.text_area("Prompt", menu_prompt, height=300)
-            st.write("### Generated Menu")
-            st.success(f'Menu generated in {elapsed_time:.2f} seconds.')
-            st.write(f'Input token count: {input_token_count}')
-            st.write(f'Output token count: {output_token_count}')
+            st.write(f"### {language_texts['label_generated_menu']}")
+            st.success(language_texts['success_menu_generated'].format(elapsed_time=elapsed_time))
+            st.write(language_texts['input_menu_token_count_label'].format(input_token_count=input_token_count))
+            st.write(language_texts['output_menu_token_count_label'].format(output_token_count=output_token_count))
             generated_menu = generated_menu.split("<recipe_end>")
             generated_menu = [m.strip() for m in generated_menu if m.strip() != ""]
-            st.write(f"Number of recipes generated: {len(generated_menu)}")
+            st.write(f"{language_texts['label_number_of_recipes_generated']}: {len(generated_menu)}")
             formatted_menu = [format_recipe(recipe) for recipe in generated_menu]
             st.session_state.formatted_menu = formatted_menu
             for i, recipe in enumerate(formatted_menu):
-                st.write(f"### Recipe {i + 1}")
+                st.write(f"### {language_texts['label_recipe']} {i + 1}")
                 st.text_area(f"Recipe {i + 1}", recipe, height=300)
 
     if 'formatted_menu' in st.session_state:
-        if st.button("Save Menu"):
+        if st.button(language_texts['button_save_menu']):
             saved_menus = load_menus()
             saved_menus.append({"name": st.session_state.menu_name, "recipes": st.session_state.formatted_menu})
             save_menus(saved_menus)
-            st.success("Menu saved successfully!")
+            st.success(language_texts['success_menu_saved'])
             st.session_state.page = "Main Board"
             st.rerun()
 
-
-def generate_menu_based_on_questions_with_RAG():
+def generate_menu_based_on_questions_with_RAG(language: str = "English"):
     num_recipes = st.session_state.num_recipes
     number_of_people = st.session_state.number_of_people
     diets = st.session_state.diets
@@ -633,6 +793,8 @@ def generate_menu_based_on_questions_with_RAG():
     - Preparation time
     - Category
     - Diet
+
+    return it in {language} but keep the token structure.
     """
 
     RAG_context = retrieve_relevant_recipe(query=f"{', '.join(compatible_ingredients)}", embeddings=embeddings, pages_and_chunks=pages_and_chunks)
@@ -830,12 +992,12 @@ def generate_grocery_list(selected_recipes):
 
 
 # Create Weekly Plan Page
-def create_weekly_plan():
-    if st.button("Return to Main Page", key="return_main_page"):
+def create_weekly_plan(language_texts):
+    if st.button(language_texts["button_return_to_main_page"], key="return_main_page"):
         st.session_state.page = "Main Board"
         st.rerun()
 
-    st.title("Create Weekly Meal Plan")
+    st.title(language_texts["title_create_weekly_plan"])
 
     days_of_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     daily_plans = {}
@@ -848,43 +1010,43 @@ def create_weekly_plan():
         plan_index = 0
         while add_more:
             plan_type = st.selectbox(
-                f"Select an option for {day}", 
-                ["None", "Add Existing Menu", "Add Existing Recipe"], 
+                f"{language_texts['select_plan_type_for_day']} {day}", 
+                [language_texts['option_none'], language_texts['option_add_existing_menu'], language_texts['option_add_existing_recipe']], 
                 key=f"{day}_plan_type_{plan_index}"
             )
 
-            if plan_type == "Add Existing Menu":
+            if plan_type == language_texts['option_add_existing_menu']:
                 existing_menus = load_menus()
                 if existing_menus:
                     menu_selection = st.selectbox(
-                        f"Select a menu for {day}", 
-                        [f"Menu {i+1}" for i in range(len(existing_menus))], 
+                        f"{language_texts['select_menu_for_day']} {day}", 
+                        [f"{language_texts['label_menu']} {i+1}" for i in range(len(existing_menus))], 
                         key=f"{day}_menu_selection_{plan_index}"
                     )
                     selected_menu = existing_menus[int(menu_selection.split()[-1]) - 1]
                     daily_plans[day].append(selected_menu)
                 else:
-                    st.write("No existing menus available.")
+                    st.write(language_texts['no_existing_menus_available'])
 
-            elif plan_type == "Add Existing Recipe":
+            elif plan_type == language_texts['option_add_existing_recipe']:
                 existing_recipes = load_recipes()
                 if existing_recipes:
                     recipe_titles = [extract_title(recipe) for recipe in existing_recipes]
                     recipe_selection = st.selectbox(
-                        f"Select a recipe for {day}", 
+                        f"{language_texts['select_recipe_for_day']} {day}", 
                         recipe_titles, 
                         key=f"{day}_recipe_selection_{plan_index}"
                     )
                     selected_recipe = existing_recipes[recipe_titles.index(recipe_selection)]
                     daily_plans[day].append(selected_recipe)
                 else:
-                    st.write("No existing recipes available.")
+                    st.write(language_texts['no_existing_recipes_available'])
 
             plan_index += 1
-            add_more = st.checkbox(f"Add another plan for {day}", key=f"{day}_add_more_{plan_index}")
+            add_more = st.checkbox(f"{language_texts['add_another_plan_for_day']} {day}", key=f"{day}_add_more_{plan_index}")
 
-    plan_name = st.text_input("Name your weekly plan", key="plan_name_input")
-    save_plan_button = st.button("Save Weekly Plan", key="save_plan_button")
+    plan_name = st.text_input(language_texts["input_plan_name_prompt"], key="plan_name_input")
+    save_plan_button = st.button(language_texts["button_save_weekly_plan"], key="save_plan_button")
 
     if save_plan_button and plan_name:
         weekly_plan = {
@@ -894,11 +1056,12 @@ def create_weekly_plan():
         saved_plans = load_plans()
         saved_plans.append(weekly_plan)
         save_plans(saved_plans)
-        st.success("Weekly plan saved successfully!")
+        st.success(language_texts["success_weekly_plan_saved"])
         st.session_state.page = "Main Board"
         st.rerun()
     elif save_plan_button:
-        st.error("Please provide a name for the weekly plan before saving.")
+        st.error(language_texts["error_provide_plan_name_before_saving"])
+
 
 
 def display_recipe(recipe):
@@ -996,20 +1159,30 @@ def grocery_list():
         st.write(f"{ingredient}: {quantity}")
 
 
-# Main Function
 def main():
     if 'page' not in st.session_state:
         st.session_state.page = "Main Board"
+    
+    # Add a dropdown menu to select the language with a unique key
+    language = st.sidebar.selectbox("Select Language", ["English", "Deutsch"], key="language_select_main")
+
+    # Load the appropriate language dictionary based on the selection
+    if language == "Deutsch":
+        language_texts = language_texts_de
+    else:
+        language_texts = language_texts_en
+
     page = st.session_state.page
 
+    # Use the selected language dictionary
     if page == "Main Board":
-        main_board()
+        main_board(language_texts)
     elif page == "Create Recipe":
-        create_recipe()
+        create_recipe(language_texts)
     elif page == "Create Menu":
-        create_menu()
+        create_menu(language_texts)
     elif page == "Create Weekly Plan":
-        create_weekly_plan()
+        create_weekly_plan(language_texts)
     elif page == "My Recipes":
         my_creations()
     elif page == "My Menus":
@@ -1018,7 +1191,6 @@ def main():
         my_plans()
     elif page == "Grocery List":
         grocery_list()
-
 
 if __name__ == "__main__":
     main()
