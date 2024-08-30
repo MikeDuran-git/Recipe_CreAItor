@@ -7,6 +7,9 @@ from openai import OpenAI # type: ignore
 from sentence_transformers import util, SentenceTransformer
 from time import perf_counter as timer
 import tiktoken
+import os
+import tqdm
+import requests
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -15,7 +18,39 @@ data_dir = "data/"
 
 # Load models and data
 model="gpt-4o-mini" #replace with a m
-embedding_model_name=data_dir+"embeddings/embedding_model.pt"
+
+# we download the embedding model from the github repository
+embedding_model_name = data_dir + "embeddings/embedding_model.pt"
+
+# URL to the file in GitHub Releases
+embedding_model_url = "https://github.com/MikeDuran-git/Recipe_CreAItor/releases/download/0.1/embedding_model.pt"
+
+# Check if the model file already exists
+if not os.path.exists(embedding_model_name):
+    print("Embedding model not found locally. Downloading from GitHub...")
+    try:
+        # Stream the download with progress bar
+        with requests.get(embedding_model_url, stream=True) as r:
+            r.raise_for_status()
+            total_size_in_bytes = int(r.headers.get('content-length', 0))
+            block_size = 8192  # 8 Kibibytes
+            progress_bar = tqdm(total=total_size_in_bytes, unit='iB', unit_scale=True)
+            
+            # Create directory if it doesn't exist
+            os.makedirs(os.path.dirname(embedding_model_name), exist_ok=True)
+            
+            with open(embedding_model_name, 'wb') as f:
+                for chunk in r.iter_content(chunk_size=block_size):
+                    if chunk:  # filter out keep-alive new chunks
+                        f.write(chunk)
+                        progress_bar.update(len(chunk))
+            progress_bar.close()
+        print("Download complete!")
+    except requests.exceptions.RequestException as e:
+        print(f"An error occurred while downloading the file: {e}")
+else:
+    print("Embedding model found locally.")
+
 test_chunks_and_embeddings_df_name=data_dir+"embeddings/text_chunks_and_embeddings_df.csv"
 
 # files that are used in the app
@@ -39,7 +74,6 @@ embeddings = torch.tensor(
     np.array(text_chunks_and_embedding_df["embedding"].tolist()),
     dtype=torch.float32
 ).to(device)
-
 
 
 client = OpenAI(
