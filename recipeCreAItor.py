@@ -11,6 +11,112 @@ import os
 import requests
 import warnings
 
+
+language_texts_fr = {
+    "language": "Français",
+    "title_my_plans": "Mes Plans",  
+    "no_plans_saved_yet": "Aucun plan enregistré pour l'instant.",  
+    "label_plan": "Plan",  
+    "label_total_nutrition": "Informations nutritionnelles totales pour",  
+    "button_delete_plan": "Supprimer le plan",  
+    "title_main": "Créateur de Recettes",
+    "welcome_message": "Bienvenue dans votre générateur de recettes optimisé par l'IA !",
+    "joke_caption": "Ne rigole pas, ton nom n'est pas mieux !",
+    "main_board_description": "Créez de nouvelles recettes, menus et plans hebdomadaires",
+    "main_board_section_new": "Créer Nouveau",
+    "button_create_recipe": "Créer une Recette",
+    "button_create_menu": "Créer un Menu",
+    "button_create_weekly_plan": "Créer un Plan Hebdomadaire",
+    "main_board_section_creations": "Mes Créations",
+    "button_my_recipes": "Mes Recettes",
+    "button_my_menus": "Mes Menus",
+    "button_my_weekly_plans": "Mes Plans Hebdomadaires",
+    "title_create_recipe": "Créer une Recette",
+    "step_select_dish_type": "Étape 1 : Sélectionnez le type de plat",
+    "select_dish_type_prompt": "Quel type de plat souhaitez-vous préparer ?",
+    "step_number_of_people": "Étape 2 : Nombre de personnes",
+    "slider_number_of_people_prompt": "Pour combien de personnes ? (entre 1 et 8)",
+    "step_dietary_preferences": "Étape 3 : Préférences alimentaires et restrictions",
+    "label_diet": "Régime",
+    "label_restrictions": "Restrictions ou aversions (ex : 'pas de fruits rouges, pas de noix...')",
+    "step_ingredients": "Étape 4 : Ingrédients",
+    "input_ingredients_prompt": "Quels ingrédients souhaitez-vous inclure dans la recette ? (listez jusqu'à 5 ingrédients séparés par des virgules, vous pouvez également dire simplement 'fruits' ou 'légumes')",
+    "step_preparation_time": "Étape 5 : Temps de préparation",
+    "select_preparation_time_prompt": "Combien de temps souhaitez-vous que la recette prenne à préparer ?",
+    "step_cooking_tools": "Étape 6 : Ustensiles de cuisine",
+    "multiselect_cooking_tools_prompt": "Quels sont vos ustensiles de cuisine ?",
+    "button_generate_recipe": "Générer une Recette",
+    "message_generating_recipe": "Génération de la recette...",
+    "label_recipe_prompt": "Demande de recette",
+    "label_generated_recipe": "Recette Générée",
+    "success_recipe_generated": "Recette générée en {elapsed_time:.2f} secondes.",
+    "input_token_count_label": "Nombre de jetons d'entrée : {input_token_count}",
+    "output_token_count_label": "Nombre de jetons de sortie : {output_token_count}",
+    "button_save_recipe": "Enregistrer la Recette",
+    "success_recipe_saved": "Recette enregistrée avec succès !",
+    "title_create_menu": "Créer un Menu",
+    "step_menu_name": "Étape 1 : Nom du Menu",
+    "input_menu_name_prompt": "Entrez un nom pour votre menu",
+    "step_number_of_recipes": "Étape 2 : Nombre de Recettes",
+    "slider_number_of_recipes_prompt": "Combien de recettes souhaitez-vous inclure dans votre menu ? (2 à 6)",
+    "step_menu_number_of_people": "Étape 3 : Nombre de Personnes",
+    "slider_menu_number_of_people_prompt": "Pour combien de personnes ? (entre 1 et 8)",
+    "step_menu_dietary_preferences": "Étape 4 : Préférences alimentaires et restrictions",
+    "step_menu_cooking_tools": "Étape 5 : Ustensiles de cuisine",
+    "button_generate_menu": "Générer un Menu",
+    "message_generating_menu": "Génération du menu...",
+    "label_menu_prompt": "Demande de menu",
+    "label_generated_menu": "Menu Généré",
+    "success_menu_generated": "Menu généré en {elapsed_time:.2f} secondes.",
+    "input_menu_token_count_label": "Nombre de jetons d'entrée : {input_token_count}",
+    "output_menu_token_count_label": "Nombre de jetons de sortie : {output_token_count}",
+    "button_save_menu": "Enregistrer le Menu",
+    "success_menu_saved": "Menu enregistré avec succès !",
+    "label_person": "Personne",
+    "label_recipe": "Recette",
+    "label_type": "Type",
+    "label_number_of_recipes_generated": "Nombre de recettes générées",
+    "button_return_to_main_page": "Retourner à la page principale",
+    "label_menu": "Menu",
+    "title_create_weekly_plan": "Créer un Plan de Repas Hebdomadaire",
+    "select_plan_type_for_day": "Sélectionnez une option pour",
+    "option_none": "Aucune",
+    "option_add_existing_menu": "Ajouter un Menu Existant",
+    "option_add_existing_recipe": "Ajouter une Recette Existante",
+    "select_menu_for_day": "Sélectionnez un menu pour",
+    "select_recipe_for_day": "Sélectionnez une recette pour",
+    "no_existing_menus_available": "Aucun menu existant disponible.",
+    "no_existing_recipes_available": "Aucune recette existante disponible.",
+    "add_another_plan_for_day": "Ajouter un autre plan pour",
+    "input_plan_name_prompt": "Nommez votre plan hebdomadaire",
+    "button_save_weekly_plan": "Enregistrer le Plan Hebdomadaire",
+    "success_weekly_plan_saved": "Plan hebdomadaire enregistré avec succès !",
+    "error_provide_plan_name_before_saving": "Veuillez fournir un nom pour le plan hebdomadaire avant d'enregistrer.",
+    "title_my_recipes": "Mes Recettes",
+    "search_recipe_by_title": "Rechercher une recette par titre",
+    "no_recipes_saved_yet": "Aucune recette enregistrée pour l'instant.",
+    "label_ingredients": "Ingrédients",
+    "label_directions": "Instructions",
+    "label_nutritional_info": "Informations Nutritionnelles",
+    "label_calories": "Calories",
+    "label_fat": "Graisse",
+    "label_carbs": "Glucides",
+    "label_protein": "Protéines",
+    "label_prep_time": "Temps de Préparation",
+    "select_for_grocery_list": "Sélectionner pour la Liste des Courses",
+    "button_delete_recipe": "Supprimer la Recette",
+    "button_generate_grocery_list": "Générer la Liste des Courses",
+    "title_grocery_list": "Liste des Courses",
+    "no_grocery_items": "Aucun article de courses trouvé.",
+    "title_my_menus": "Mes Menus",  
+    "search_menu_by_name": "Rechercher un menu par nom",  
+    "no_menus_saved_yet": "Aucun menu enregistré pour l'instant.",  
+    "button_generate_grocery_list": "Générer la Liste des Courses",  
+    "button_delete_menu": "Supprimer le Menu"  
+}
+
+
+
 language_texts_en = {
     "language": "English",
     "title_my_plans": "My Plans",  # Added this key
@@ -1227,11 +1333,13 @@ def main():
         st.session_state.page = "Main Board"
     
     # Add a dropdown menu to select the language with a unique key
-    language = st.sidebar.selectbox("Select Language", ["English", "Deutsch"], key="language_select_main")
+    language = st.sidebar.selectbox("Select Language", ["English", "Deutsch", "Français"], key="language_select_main")
 
     # Load the appropriate language dictionary based on the selection
     if language == "Deutsch":
         language_texts = language_texts_de
+    elif language == "Français":
+        language_texts = language_texts_fr
     else:
         language_texts = language_texts_en
 
@@ -1254,6 +1362,7 @@ def main():
         my_plans(language_texts)
     elif page == "Grocery List":
         grocery_list(language_texts)
+
 
 if __name__ == "__main__":
     main()
